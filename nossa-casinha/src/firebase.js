@@ -12,13 +12,13 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase }   from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey:            "COLE_AQUI_SEU_apiKey",
-  authDomain:        "COLE_AQUI_SEU_authDomain",
-  databaseURL:       "COLE_AQUI_SEU_databaseURL",
-  projectId:         "COLE_AQUI_SEU_projectId",
-  storageBucket:     "COLE_AQUI_SEU_storageBucket",
-  messagingSenderId: "COLE_AQUI_SEU_messagingSenderId",
-  appId:             "COLE_AQUI_SEU_appId",
+  apiKey:            "AIzaSyAz1hjQFNrvN0sEehPSoS_Do2lKUhjxkCo",
+  authDomain:        "nossa-casinha-9cf39.firebaseapp.com",
+  databaseURL:       "https://nossa-casinha-9cf39-default-rtdb.firebaseio.com",
+  projectId:         "nossa-casinha-9cf39",
+  storageBucket:     "nossa-casinha-9cf39.firebasestorage.app",
+  messagingSenderId: "326715488454",
+  appId:             "1:326715488454:web:023647ac47638c775dffc7",
 };
 
 const app = initializeApp(firebaseConfig);
