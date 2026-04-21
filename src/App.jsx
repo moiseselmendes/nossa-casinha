@@ -4,9 +4,10 @@ const TX_KEY   = "casa-transacoes";
 const COST_KEY = "casa-custos";
 const CATS_KEY = "casa-categorias";
 
-// ── Firebase storage (real-time sync) ───────────────────────────
-import { db } from './firebase';
-import { ref, set as fbSet, onValue } from 'firebase/database';
+const storage = {
+  get: (key) => { try { const v = localStorage.getItem(key); return v ? { value: v } : null; } catch { return null; } },
+  set: (key, val) => { try { localStorage.setItem(key, val); } catch {} },
+};
 
 const DEFAULT_CATS = [
   { id:"doc",         label:"Documentação Financiamento", color:"#6366f1", bg:"#eef2ff", border:"#c7d2fe", icon:"📄" },
@@ -80,29 +81,22 @@ export default function App() {
   const showToast = (msg,ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),2800); };
 
   useEffect(()=>{
-    const initRef = (key, seed, setter, transform) => {
-      const r = ref(db, key);
-      return onValue(r, (snap) => {
-        const val = snap.val();
-        if (val && (Array.isArray(val) ? val.length > 0 : Object.keys(val).length > 0)) {
-          const arr = Array.isArray(val) ? val : Object.values(val);
-          setter(transform ? transform(arr) : arr);
-        } else {
-          setter(seed);
-          fbSet(r, seed);
-        }
-      });
+    const loadKey = (key,seed,setter,transform) => {
+      try {
+        const r=storage.get(key); const s=r?JSON.parse(r.value):null;
+        if(s&&(Array.isArray(s)?s.length>0:true)){ setter(transform?transform(s):s); }
+        else { setter(seed); if(seed) storage.set(key,JSON.stringify(seed)); }
+      } catch { setter(seed); if(seed) storage.set(key,JSON.stringify(seed)); }
     };
-    const u1 = initRef(CATS_KEY, DEFAULT_CATS, setCats, null);
-    const u2 = initRef(TX_KEY,   SEED_TX,      setTx,  null);
-    const u3 = initRef(COST_KEY, SEED_COSTS,   setCosts, s=>s.map(c=>({paidAmount:0,...c})));
-    setTimeout(()=>setLoading(false), 900);
-    return () => { u1(); u2(); u3(); };
+    loadKey(CATS_KEY, DEFAULT_CATS, setCats, null);
+    loadKey(TX_KEY,   SEED_TX,      setTx,  null);
+    loadKey(COST_KEY, SEED_COSTS,   setCosts, s=>s.map(c=>({paidAmount:0,...c})));
+    setLoading(false);
   },[]);
 
-  const saveTx    = d => { setTx(d);    fbSet(ref(db,TX_KEY),   d); };
-  const saveCosts = d => { setCosts(d); fbSet(ref(db,COST_KEY), d); };
-  const saveCats  = d => { setCats(d);  fbSet(ref(db,CATS_KEY), d); };
+  const saveTx    = d => { setTx(d);    storage.set(TX_KEY,  JSON.stringify(d)); };
+  const saveCosts = d => { setCosts(d); storage.set(COST_KEY,JSON.stringify(d)); };
+  const saveCats  = d => { setCats(d);  storage.set(CATS_KEY,JSON.stringify(d)); };
 
   // ── Computed ────────────────────────────────────────────────────
   const totalSaved   = transactions.reduce((a,t)=>isEntrada(t.type)?a+t.amount:a-t.amount,0);
@@ -644,8 +638,8 @@ export default function App() {
             {costs.length>0&&(
               <div style={{...S.card,background:"linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)",border:"1px solid #93c5fd"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div><div style={S.label}>INVESTIMENTO RESTANTE</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,color:"#1e4d9b",fontWeight:400,marginTop:4}}>{fmt(totalCosts)}</div></div>
-                  <div style={{textAlign:"right"}}><div style={S.label}>FALTA</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:remaining<=0?"#16a34a":"#0284c7",fontWeight:400,marginTop:4}}>{fmt(remaining)}</div></div>
+                  <div><div style={S.label}>CUSTOS TOTAIS ATIVOS</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:36,color:"#1e4d9b",fontWeight:400,marginTop:4}}>{fmt(totalCosts)}</div></div>
+                  <div style={{textAlign:"right"}}><div style={S.label}>FALTA GUARDAR</div><div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:remaining<=0?"#16a34a":"#0284c7",fontWeight:400,marginTop:4}}>{fmt(remaining)}</div></div>
                 </div>
               </div>
             )}
