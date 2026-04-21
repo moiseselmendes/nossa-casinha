@@ -110,7 +110,8 @@ export default function App() {
   const totalGross   = costs.reduce((a,c)=>a+c.amount,0);
   const totalCosts   = costs.reduce((a,c)=>a+Math.max(c.amount-(c.paidAmount||0),0),0);
   const remaining    = Math.max(totalCosts-totalSaved,0);
-  const progress     = totalGross>0 ? Math.min(totalPaidOut/totalGross*100,100) : 0;
+  const progress      = totalGross>0 ? Math.min(totalPaidOut/totalGross*100,100) : 0;
+  const progressSaved = totalGross>0 ? Math.min(totalSaved/totalGross*100,100)   : 0;
   const catTotal     = id => costs.filter(c=>c.category===id).reduce((a,c)=>a+Math.max(c.amount-(c.paidAmount||0),0),0);
   const personSaved  = p  => transactions.filter(t=>personOf(t.type)===p).reduce((a,t)=>isEntrada(t.type)?a+t.amount:a-t.amount,0);
   const totalMoises  = personSaved("Moisés");
@@ -341,7 +342,7 @@ export default function App() {
         </div>
         <div style={{textAlign:"right"}}>
           <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:3,color:"rgba(255,255,255,.6)",textTransform:"uppercase",display:"block",marginBottom:4}}>PROGRESSO GERAL</span>
-          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,color:"#fff",display:"block",lineHeight:1}}>{progress.toFixed(1)}%</span>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:30,color:"#fff",display:"block",lineHeight:1}}>{progressSaved.toFixed(1)}%</span>
         </div>
       </header>
 
@@ -365,15 +366,43 @@ export default function App() {
               <KpiCard label="FALTA GUARDAR"    value={fmt(remaining)}   sub={remaining<=0?"Meta atingida! 🎉":`${(100-progress).toFixed(1)}% do objetivo`} accent={remaining<=0?"#16a34a":"#0284c7"} icon={remaining<=0?"✅":"🎯"}/>
             </div>
 
+            {/* ── Barra: Meta Guardado ── */}
             <div style={S.card}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12}}>
-                <span style={S.label}>BARRA DE PROGRESSO</span>
-                <span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"#2563eb"}}>{fmt(totalPaidOut)} pago de {fmt(totalGross)}</span>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                <div>
+                  <span style={S.label}>💙 META GUARDADO</span>
+                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8",marginTop:2}}>quanto do total já foi guardado</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,color:"#2563eb",fontWeight:400}}>{progressSaved.toFixed(1)}%</span>
+                </div>
               </div>
-              <div style={S.progressTrack}><div style={{...S.progressFill,width:`${progress}%`}}/></div>
-              <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
-                <span style={{...S.label,fontSize:10}}>R$ 0</span>
-                <span style={{...S.label,fontSize:10}}>{fmt(totalGross)}</span>
+              <div style={{...S.progressTrack,height:10,marginBottom:8}}>
+                <div style={{...S.progressFill,width:`${progressSaved}%`,background:"linear-gradient(90deg,#1e4d9b 0%,#2563eb 60%,#60a5fa 100%)"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#2563eb"}}>{fmt(totalSaved)} guardado</span>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#9ab8d8"}}>meta: {fmt(totalGross)}</span>
+              </div>
+            </div>
+
+            {/* ── Barra: Custos Pagos ── */}
+            <div style={S.card}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                <div>
+                  <span style={S.label}>✅ CUSTOS PAGOS</span>
+                  <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8",marginTop:2}}>quanto do total de custos já foi quitado</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:26,color:"#059669",fontWeight:400}}>{progress.toFixed(1)}%</span>
+                </div>
+              </div>
+              <div style={{...S.progressTrack,height:10,marginBottom:8}}>
+                <div style={{...S.progressFill,width:`${progress}%`,background:"linear-gradient(90deg,#065f46 0%,#059669 60%,#34d399 100%)",boxShadow:"0 0 8px rgba(5,150,105,.3)"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between"}}>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#059669"}}>{fmt(totalPaidOut)} pago</span>
+                <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"#9ab8d8"}}>total: {fmt(totalGross)}</span>
               </div>
             </div>
 
