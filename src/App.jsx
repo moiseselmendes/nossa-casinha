@@ -427,51 +427,63 @@ function FinanceiroApp({catsFin,setCatsFin,transactions,setTx,costs,setCosts,onH
           {/* Instrução */}
           <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:8,padding:"10px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:18}}>💡</span>
-            <span style={{fontSize:13,color:"#92400e"}}>Clique no <strong>quadradinho</strong> ao lado de cada item para marcá-lo como quitado. Ele será movido para a seção <strong>"Custos Já Quitados"</strong> abaixo.</span>
+            <span style={{fontSize:13,color:"#92400e"}}>Clique no <strong>quadradinho</strong> ao lado de cada item para marcá-lo como quitado. O valor é descontado dos custos totais automaticamente.</span>
           </div>
 
-          {/* Cards por categoria — somente itens ATIVOS */}
+          {/* Cards por categoria — todos os itens, quitados ficam verdes no lugar */}
           {catsFin.map(cat=>{
             const allItems=costs.filter(c=>c.category===cat.id);
-            const items=allItems.filter(c=>!isFullyPaid(c));
-            const subtotal=items.reduce((a,c)=>a+Math.max(c.amount-(c.paidAmount||0),0),0);
+            const subtotal=allItems.reduce((a,c)=>a+Math.max(c.amount-(c.paidAmount||0),0),0);
+            const quitados=allItems.filter(c=>isFullyPaid(c)).length;
             return(<div key={cat.id} style={{background:"#fff",border:"1px solid #dae6f5",borderRadius:10,padding:"16px 18px",marginBottom:14,boxShadow:"0 1px 6px rgba(30,77,155,.06)"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:items.length>0?10:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:allItems.length>0?10:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
                   <span style={{fontSize:17}}>{cat.icon}</span>
                   <span style={{fontSize:14,fontWeight:500,color:cat.color}}>{cat.label}</span>
-                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,borderRadius:10,padding:"2px 7px"}}>{items.length} ativo(s)</span>
-                  {allItems.length>items.length&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,background:"#dcfce7",color:"#16a34a",border:"1px solid #86efac",borderRadius:10,padding:"2px 7px"}}>✅ {allItems.length-items.length} quitado(s)</span>}
+                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,background:cat.bg,color:cat.color,border:`1px solid ${cat.border}`,borderRadius:10,padding:"2px 7px"}}>{allItems.length} item(ns)</span>
+                  {quitados>0&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,background:"#dcfce7",color:"#16a34a",border:"1px solid #86efac",borderRadius:10,padding:"2px 7px"}}>✅ {quitados} quitado(s)</span>}
                 </div>
                 <span style={{fontFamily:"'DM Mono',monospace",fontSize:14,color:cat.color}}>{fmt(subtotal)}</span>
               </div>
-              {items.length===0
-                ?<div style={{fontSize:12,color:"#9ab8d8",paddingTop:4}}>{allItems.length>0?"Todos os itens desta categoria foram quitados! ✅":"Selecione esta categoria para adicionar itens."}</div>
+              {allItems.length===0
+                ?<div style={{fontSize:12,color:"#9ab8d8",paddingTop:4}}>Selecione esta categoria para adicionar itens.</div>
                 :<div>
-                  {items.map((c,i)=>{
-                    const pp=paidPct(c),rem=Math.max(c.amount-(c.paidAmount||0),0);
-                    return(<div key={c.id} className="crow rh" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 8px",borderRadius:6,transition:"background .15s",borderBottom:"1px solid #d0e3f5"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,flex:1}}>
-                        {/* Checkbox de quitação */}
-                        <button className="chk" title="Marcar como quitado" onClick={()=>toggleCostPaid(c.id)}
-                          style={{width:22,height:22,borderRadius:5,border:`2px solid ${cat.color}`,background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .15s"}}/>
-                        <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#b0c8e0",minWidth:16}}>{String(i+1).padStart(2,"0")}</div>
-                        <div style={{flex:1}}>
-                          <span style={{fontSize:13,color:"#1a3050"}}>{c.desc}</span>
-                          <div style={{display:"flex",alignItems:"center",gap:7,marginTop:2}}>
-                            <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8"}}>{pp.toFixed(0)}% pago</span>
-                            {pp>0&&pp<100&&<div style={{flex:1,maxWidth:70,background:"#dae6f5",borderRadius:2,height:3}}><div style={{width:`${pp}%`,height:"100%",background:cat.color,borderRadius:2}}/></div>}
+                  {allItems.map((c,i)=>{
+                    const fp=isFullyPaid(c);
+                    const pp=paidPct(c);
+                    const rem=Math.max(c.amount-(c.paidAmount||0),0);
+                    return(
+                      <div key={c.id} className="crow" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 8px",borderRadius:6,transition:"all .2s",borderBottom:"1px solid #d0e3f5",background:fp?"#f0fdf4":"transparent"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,flex:1}}>
+                          {/* Checkbox */}
+                          <button className="chk" title={fp?"Desmarcar quitado":"Marcar como quitado"} onClick={()=>toggleCostPaid(c.id)}
+                            style={{width:22,height:22,borderRadius:5,border:`2px solid ${fp?"#16a34a":cat.color}`,background:fp?"#16a34a":"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:13,color:"white",fontWeight:900,transition:"all .2s"}}>
+                            {fp?"✓":""}
+                          </button>
+                          <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:fp?"#86efac":"#b0c8e0",minWidth:16}}>{String(i+1).padStart(2,"0")}</div>
+                          <div style={{flex:1}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontSize:13,color:fp?"#166534":"#1a3050",textDecoration:fp?"line-through":"none"}}>{c.desc}</span>
+                              {fp&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:9,background:"#dcfce7",color:"#16a34a",border:"1px solid #86efac",borderRadius:99,padding:"1px 7px",flexShrink:0}}>QUITADO</span>}
+                            </div>
+                            {!fp&&pp>0&&pp<100&&<div style={{display:"flex",alignItems:"center",gap:7,marginTop:2}}>
+                              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8"}}>{pp.toFixed(0)}% pago</span>
+                              <div style={{flex:1,maxWidth:70,background:"#dae6f5",borderRadius:2,height:3}}><div style={{width:`${pp}%`,height:"100%",background:cat.color,borderRadius:2}}/></div>
+                            </div>}
+                          </div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontFamily:"'DM Mono',monospace",fontSize:14,color:fp?"#16a34a":cat.color,textDecoration:fp?"line-through":"none"}}>{fmt(fp?c.amount:rem)}</div>
+                            {!fp&&pp>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8"}}>de {fmt(c.amount)}</div>}
+                          </div>
+                          <div className="ca" style={{display:"flex",gap:5,opacity:0,transition:"opacity .2s"}}>
+                            {!fp&&<button className="bgh" onClick={()=>startEditCost(c)} style={{...F.bg,padding:"3px 7px",fontSize:11,color:"#6366f1"}}>✎</button>}
+                            <button className="bgh" onClick={()=>removeCost(c.id)} style={{...F.bg,padding:"3px 7px",fontSize:11,color:"#dc2626",borderColor:"#fecaca"}}>✕</button>
                           </div>
                         </div>
                       </div>
-                      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                        <div style={{textAlign:"right"}}><div style={{fontFamily:"'DM Mono',monospace",fontSize:14,color:cat.color}}>{fmt(rem)}</div>{pp>0&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8"}}>de {fmt(c.amount)}</div>}</div>
-                        <div className="ca" style={{display:"flex",gap:5,opacity:0,transition:"opacity .2s"}}>
-                          <button className="bgh" onClick={()=>startEditCost(c)} style={{...F.bg,padding:"3px 7px",fontSize:11,color:"#6366f1"}}>✎</button>
-                          <button className="bgh" onClick={()=>removeCost(c.id)} style={{...F.bg,padding:"3px 7px",fontSize:11,color:"#dc2626",borderColor:"#fecaca"}}>✕</button>
-                        </div>
-                      </div>
-                    </div>);
+                    );
                   })}
                   <div style={{borderTop:"1px solid #dae6f5",marginTop:5,paddingTop:8,display:"flex",justifyContent:"flex-end",gap:14}}>
                     <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:3,color:"#7aa0c8",textTransform:"uppercase"}}>SUBTOTAL RESTANTE</span>
@@ -481,44 +493,6 @@ function FinanceiroApp({catsFin,setCatsFin,transactions,setTx,costs,setCosts,onH
               }
             </div>);
           })}
-
-          {/* ══ CUSTOS JÁ QUITADOS ══ */}
-          {paidCosts.length>0&&(
-            <div style={{background:"#f0fdf4",border:"1.5px solid #86efac",borderRadius:10,padding:"16px 18px",marginBottom:14}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:20}}>✅</span>
-                  <span style={{fontSize:15,fontWeight:700,color:"#16a34a"}}>Custos Já Quitados</span>
-                  <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,background:"#dcfce7",color:"#16a34a",border:"1px solid #86efac",borderRadius:10,padding:"2px 8px"}}>{paidCosts.length} item(ns)</span>
-                </div>
-                <span style={{fontFamily:"'DM Mono',monospace",fontSize:15,color:"#16a34a",fontWeight:700}}>{fmt(paidCosts.reduce((a,c)=>a+c.amount,0))}</span>
-              </div>
-              <div>
-                {paidCosts.map(c=>{
-                  const cat=catsFin.find(x=>x.id===c.category);
-                  return(
-                    <div key={c.id} className="rh" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 8px",borderRadius:6,transition:"background .15s",borderBottom:"1px solid #bbf7d0"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,flex:1}}>
-                        {/* Checkbox verde — clicar desmarca */}
-                        <button className="chk" title="Desmarcar quitado" onClick={()=>toggleCostPaid(c.id)}
-                          style={{width:22,height:22,borderRadius:5,border:"2px solid #16a34a",background:"#16a34a",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:13,color:"white",fontWeight:900,transition:"all .15s"}}>✓</button>
-                        <div>
-                          <div style={{display:"flex",alignItems:"center",gap:6}}>
-                            <span style={{fontSize:13,color:"#166534",textDecoration:"line-through"}}>{c.desc}</span>
-                          </div>
-                          <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#4ade80",marginTop:1}}>{cat?.icon} {cat?.label}</div>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"#16a34a",textDecoration:"line-through"}}>{fmt(c.amount)}</span>
-                        <button className="bgh" onClick={()=>removeCost(c.id)} style={{...F.bg,padding:"3px 7px",fontSize:11,color:"#dc2626",borderColor:"#fecaca"}}>✕</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>}
       </main>
     </div>
