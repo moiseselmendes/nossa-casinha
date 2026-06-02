@@ -167,7 +167,7 @@ function FinanceiroApp({catsFin,setCatsFin,transactions,setTx,costs,setCosts,onH
   const totalCosts=costs.reduce((a,c)=>a+Math.max(c.amount-(c.paidAmount||0),0),0);
   const remaining=Math.max(totalCosts-totalSaved,0);
   const progress=totalGross>0?Math.min(totalPaidOut/totalGross*100,100):0;
-  const progressSaved=totalGross>0?Math.min(totalSaved/totalGross*100,100):0;
+  const progressSaved=totalCosts>0?Math.min(totalSaved/totalCosts*100,100):0;
   const pSaved=p=>transactions.filter(t=>personOf(t.type)===p).reduce((a,t)=>isEntrada(t.type)?a+t.amount:a-t.amount,0);
   const activeCosts=costs.filter(c=>!isFullyPaid(c));
   const paidCosts=costs.filter(c=>isFullyPaid(c));
@@ -300,7 +300,7 @@ function FinanceiroApp({catsFin,setCatsFin,transactions,setTx,costs,setCosts,onH
         {/* ══ DASHBOARD ══ */}
         {tab==="dashboard"&&<div style={{animation:"sIn .3s ease"}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:14,marginBottom:14}}>
-            {[{l:"TOTAL GUARDADO",v:fmt(totalSaved),s:`em ${transactions.filter(t=>isEntrada(t.type)).length} depósitos`,a:"#2563eb",i:"🏦"},{l:"CUSTOS RESTANTES",v:fmt(totalCosts),s:`${activeCosts.length} custo(s) em aberto`,a:"#6366f1",i:"📋"},{l:"FALTA GUARDAR",v:fmt(remaining),s:remaining<=0?"Meta atingida! 🎉":`${(100-progress).toFixed(1)}% do objetivo`,a:remaining<=0?"#16a34a":"#0284c7",i:remaining<=0?"✅":"🎯"}].map((k,i)=>(
+            {[{l:"TOTAL GUARDADO",v:fmt(totalSaved),s:`em ${transactions.filter(t=>isEntrada(t.type)).length} depósitos`,a:"#2563eb",i:"🏦"},{l:"CUSTOS TOTAIS",v:fmt(totalCosts),s:`${activeCosts.length} custo(s) em aberto`,a:"#6366f1",i:"📋"},{l:"FALTA GUARDAR",v:fmt(remaining),s:remaining<=0?"Meta atingida! 🎉":`${(100-progress).toFixed(1)}% do objetivo`,a:remaining<=0?"#16a34a":"#0284c7",i:remaining<=0?"✅":"🎯"}].map((k,i)=>(
               <div key={i} style={{background:"#fff",border:"1px solid #dae6f5",borderRadius:10,padding:"16px 18px",boxShadow:"0 1px 6px rgba(30,77,155,.06)",borderTop:`3px solid ${k.a}`,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:10,right:12,fontSize:20,opacity:.2}}>{k.i}</div>
                 <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:3,color:"#7aa0c8",textTransform:"uppercase"}}>{k.l}</div>
@@ -309,7 +309,7 @@ function FinanceiroApp({catsFin,setCatsFin,transactions,setTx,costs,setCosts,onH
               </div>
             ))}
           </div>
-          {[{l:"💙 META GUARDADO",s:"quanto do total já foi guardado",pct:progressSaved,lft:`${fmt(totalSaved)} guardado`,rgt:`meta: ${fmt(totalGross)}`,c:"#2563eb",g:"linear-gradient(90deg,#1e4d9b,#2563eb,#60a5fa)"},{l:"✅ CUSTOS PAGOS",s:"quanto do total de custos já foi quitado",pct:progress,lft:`${fmt(totalPaidOut)} pago`,rgt:`total: ${fmt(totalGross)}`,c:"#059669",g:"linear-gradient(90deg,#065f46,#059669,#34d399)"}].map((pb,i)=>(
+          {[{l:"💙 META GUARDADO",s:"quanto do total já foi guardado",pct:progressSaved,lft:`${fmt(totalSaved)} guardado`,rgt:`meta: ${fmt(totalCosts)}`,c:"#2563eb",g:"linear-gradient(90deg,#1e4d9b,#2563eb,#60a5fa)"},{l:"✅ CUSTOS PAGOS",s:"quanto do total de custos já foi quitado",pct:progress,lft:`${fmt(totalPaidOut)} pago`,rgt:`total: ${fmt(totalGross)}`,c:"#059669",g:"linear-gradient(90deg,#065f46,#059669,#34d399)"}].map((pb,i)=>(
             <div key={i} style={{background:"#fff",border:"1px solid #dae6f5",borderRadius:10,padding:"16px 18px",marginBottom:14,boxShadow:"0 1px 6px rgba(30,77,155,.06)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}><div><span style={{fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:3,color:"#7aa0c8",textTransform:"uppercase"}}>{pb.l}</span><div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#9ab8d8",marginTop:1}}>{pb.s}</div></div><span style={{fontSize:22,color:pb.c,fontWeight:800}}>{pb.pct.toFixed(1)}%</span></div>
               <div style={{height:9,background:"#dae6f5",borderRadius:4,overflow:"hidden",marginBottom:7}}><div style={{height:"100%",background:pb.g,borderRadius:4,width:`${pb.pct}%`,transition:"width 1s cubic-bezier(.16,1,.3,1)"}}/></div>
